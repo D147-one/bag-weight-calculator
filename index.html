@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>袋重计算器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+        body { background: #1e6fff; color: #333; min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
+        .container { width: 100%; max-width: 600px; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
+        .header { background: #1e6fff; color: white; padding: 20px; text-align: center; }
+        .header h1 { font-size: 22px; margin-bottom: 8px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .content { padding: 25px; }
+        .calculator-selector { margin-bottom: 25px; display: flex; gap: 15px; justify-content: center; }
+        .calculator-selector button { padding: 10px 20px; border: 2px solid #1e6fff; background: white; color: #1e6fff; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s; }
+        .calculator-selector button.active { background: #1e6fff; color: white; }
+        .calculator-section { display: none; }
+        .calculator-section.active { display: block; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #555; }
+        .input-group input { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .input-group input:focus { border-color: #1e6fff; box-shadow: 0 0 0 2px rgba(30,111,255,0.2); outline: none; }
+        .formula-section { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #1e6fff; }
+        .formula-section h3 { margin-bottom: 10px; color: #1e6fff; font-size: 16px; }
+        .formula { font-family: Consolas, Monaco, monospace; background: white; padding: 10px; border-radius: 6px; font-size: 14px; border: 1px solid #eaeaea; line-height: 1.5; }
+        .result-section { background: #e7f3ff; padding: 20px; border-radius: 8px; text-align: center; margin-top: 20px; border: 1px solid #b3d4fc; }
+        .result-label { font-size: 14px; color: #555; margin-bottom: 8px; }
+        .result-value { font-size: 28px; font-weight: bold; color: #1e6fff; }
+        .unit { font-size: 16px; color: #777; margin-left: 5px; }
+        .note { font-size: 12px; color: #777; margin-top: 15px; text-align: center; line-height: 1.5; }
+        .instructions { background: #fff8e1; padding: 15px; border-radius: 8px; margin-top: 25px; font-size: 13px; line-height: 1.5; }
+        .instructions h3 { color: #ff8f00; margin-bottom: 8px; font-size: 14px; }
+        .input-row { display: flex; gap: 15px; }
+        .input-row .input-group { flex: 1; }
+        .dingtalk-tips { background: #e8f4fd; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 13px; line-height: 1.5; border: 1px solid #b3d4fc; }
+        .dingtalk-tips h3 { color: #1e6fff; margin-bottom: 8px; font-size: 14px; }
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .content { padding: 20px; }
+            .result-value { font-size: 24px; }
+            .input-row, .calculator-selector { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>袋重计算器</h1>
+            <p>输入参数，实时计算袋重</p>
+        </div>
+        
+        <div class="content">
+            <div class="calculator-selector">
+                <button id="noWaistBtn" class="active">无腰线</button>
+                <button id="threeDBagBtn">立体袋</button>
+            </div>
+            
+            <!-- 无腰线计算器 -->
+            <div id="noWaistCalculator" class="calculator-section active">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="length">长（mm）</label>
+                        <input type="number" id="length" step="0.1" placeholder="请输入长度">
+                    </div>
+                    <div class="input-group">
+                        <label for="width">宽（mm）</label>
+                        <input type="number" id="width" step="0.1" placeholder="请输入宽度">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="height">高（mm）</label>
+                        <input type="number" id="height" step="0.1" placeholder="请输入高度">
+                    </div>
+                    <div class="input-group">
+                        <label for="overlap">搭头（mm）</label>
+                        <input type="number" id="overlap" step="0.1" placeholder="请输入搭头长度">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="fold">折进（mm）</label>
+                        <input type="number" id="fold" step="0.1" placeholder="请输入折进长度">
+                    </div>
+                    <div class="input-group">
+                        <label for="coatingWeight">淋膜克重（g）</label>
+                        <input type="number" id="coatingWeight" step="0.1" placeholder="请输入淋膜克重">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="webbing">织带（g）</label>
+                        <input type="number" id="webbing" step="0.1" placeholder="请输入织带重量">
+                    </div>
+                    <div class="input-group">
+                        <label for="other">其它（g）</label>
+                        <input type="number" id="other" step="0.1" placeholder="请输入其它重量">
+                    </div>
+                </div>
+                
+                <div class="formula-section">
+                    <h3>计算公式</h3>
+                    <div class="formula">
+                        袋重 = (((长 + 80) * 宽 + 2 * (长 + 宽 + 搭头) * (高 + 折进)) / 1000000) * 淋膜克重 + 织带 + 其它
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 立体袋计算器 -->
+            <div id="threeDBagCalculator" class="calculator-section">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="perimeter">周长（mm）</label>
+                        <input type="number" id="perimeter" step="0.1" placeholder="请输入周长">
+                    </div>
+                    <div class="input-group">
+                        <label for="width3d">幅宽（mm）</label>
+                        <input type="number" id="width3d" step="0.1" placeholder="请输入幅宽">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="coatingWeight3d">淋膜克重（g）</label>
+                        <input type="number" id="coatingWeight3d" step="0.1" placeholder="请输入淋膜克重">
+                    </div>
+                    <div class="input-group">
+                        <label for="handle">提带（g）</label>
+                        <input type="number" id="handle" step="0.1" placeholder="请输入提带重量">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="other3d">其它（g）</label>
+                        <input type="number" id="other3d" step="0.1" placeholder="请输入其它重量">
+                    </div>
+                    <div class="input-group" style="visibility: hidden;">
+                        <label>&nbsp;</label>
+                        <input type="text" style="visibility: hidden;">
+                    </div>
+                </div>
+                
+                <div class="formula-section">
+                    <h3>计算公式</h3>
+                    <div class="formula">
+                        袋重 = (周长 * 幅宽 * 淋膜克重) / 1000000 + 提带 + 其它
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-section">
+                <div class="result-label">袋重</div>
+                <div class="result-value" id="result">0.00<span class="unit">g</span></div>
+            </div>
+            
+            <div class="note">
+                所有长度单位为毫米(mm)，重量单位为克(g)
+            </div>
+            
+            <div class="dingtalk-tips">
+                <h3>使用说明</h3>
+                <p>1. 将此HTML文件保存到电脑或手机</p>
+                <p>2. 用浏览器打开即可使用计算器</p>
+                <p>3. 可以通过钉钉发送此文件给同事</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取所有DOM元素
+        const noWaistBtn = document.getElementById('noWaistBtn');
+        const threeDBagBtn = document.getElementById('threeDBagBtn');
+        const noWaistCalculator = document.getElementById('noWaistCalculator');
+        const threeDBagCalculator = document.getElementById('threeDBagCalculator');
+        const resultElement = document.getElementById('result');
+        
+        // 无腰线计算器输入元素
+        const lengthInput = document.getElementById('length');
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+        const overlapInput = document.getElementById('overlap');
+        const foldInput = document.getElementById('fold');
+        const coatingWeightInput = document.getElementById('coatingWeight');
+        const webbingInput = document.getElementById('webbing');
+        const otherInput = document.getElementById('other');
+        
+        // 立体袋计算器输入元素
+        const perimeterInput = document.getElementById('perimeter');
+        const width3dInput = document.getElementById('width3d');
+        const coatingWeight3dInput = document.getElementById('coatingWeight3d');
+        const handleInput = document.getElementById('handle');
+        const other3dInput = document.getElementById('other3d');
+        
+        // 当前激活的计算器类型
+        let activeCalculator = 'noWaist';
+        
+        // 切换计算器
+        noWaistBtn.addEventListener('click', function() {
+            activeCalculator = 'noWaist';
+            noWaistBtn.classList.add('active');
+            threeDBagBtn.classList.remove('active');
+            noWaistCalculator.classList.add('active');
+            threeDBagCalculator.classList.remove('active');
+            calculateWeight();
+        });
+        
+        threeDBagBtn.addEventListener('click', function() {
+            activeCalculator = 'threeDBag';
+            threeDBagBtn.classList.add('active');
+            noWaistBtn.classList.remove('active');
+            threeDBagCalculator.classList.add('active');
+            noWaistCalculator.classList.remove('active');
+            calculateWeight();
+        });
+        
+        // 计算公式
+        function calculateWeight() {
+            let weight = 0;
+            
+            if (activeCalculator === 'noWaist') {
+                // 无腰线计算公式
+                const length = parseFloat(lengthInput.value) || 0;
+                const width = parseFloat(widthInput.value) || 0;
+                const height = parseFloat(heightInput.value) || 0;
+                const overlap = parseFloat(overlapInput.value) || 0;
+                const fold = parseFloat(foldInput.value) || 0;
+                const coatingWeight = parseFloat(coatingWeightInput.value) || 0;
+                const webbing = parseFloat(webbingInput.value) || 0;
+                const other = parseFloat(otherInput.value) || 0;
+                
+                // 计算公式: (((长+80)*宽+2*(长+宽+搭头)*(高+折进))/1000000)*淋膜克重+织带+其它
+                const area = ((length + 80) * width + 2 * (length + width + overlap) * (height + fold)) / 1000000;
+                weight = area * coatingWeight + webbing + other;
+            } else {
+                // 立体袋计算公式
+                const perimeter = parseFloat(perimeterInput.value) || 0;
+                const width3d = parseFloat(width3dInput.value) || 0;
+                const coatingWeight3d = parseFloat(coatingWeight3dInput.value) || 0;
+                const handle = parseFloat(handleInput.value) || 0;
+                const other3d = parseFloat(other3dInput.value) || 0;
+                
+                // 计算公式: (周长 * 幅宽 * 淋膜克重) / 1000000 + 提带 + 其它
+                weight = (perimeter * width3d * coatingWeight3d) / 1000000 + handle + other3d;
+            }
+            
+            // 显示结果，保留2位小数
+            resultElement.innerHTML = weight.toFixed(2) + '<span class="unit">g</span>';
+        }
+        
+        // 添加事件监听器，实现实时计算
+        // 无腰线计算器输入
+        lengthInput.addEventListener('input', calculateWeight);
+        widthInput.addEventListener('input', calculateWeight);
+        heightInput.addEventListener('input', calculateWeight);
+        overlapInput.addEventListener('input', calculateWeight);
+        foldInput.addEventListener('input', calculateWeight);
+        coatingWeightInput.addEventListener('input', calculateWeight);
+        webbingInput.addEventListener('input', calculateWeight);
+        otherInput.addEventListener('input', calculateWeight);
+        
+        // 立体袋计算器输入
+        perimeterInput.addEventListener('input', calculateWeight);
+        width3dInput.addEventListener('input', calculateWeight);
+        coatingWeight3dInput.addEventListener('input', calculateWeight);
+        handleInput.addEventListener('input', calculateWeight);
+        other3dInput.addEventListener('input', calculateWeight);
+        
+        // 初始计算
+        calculateWeight();
+    </script>
+</body>
+</html>
