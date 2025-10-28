@@ -1,1 +1,1 @@
-# bag-weight-calculator
+# weight-calculator
